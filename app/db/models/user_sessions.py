@@ -13,7 +13,7 @@ class User_sessions(Base):
     user_id = Column(Integer, ForeignKey("users.user_id"))
     user = relationship("Users", back_populates="user_session")
 
-
+"""Validates user jwt access_token"""
 def validate_user_session_token(user_id:int, access_token:str, db:Session):
     user_session = db.query(User_sessions).filter(
         User_sessions.user_id == user_id, 
@@ -21,7 +21,7 @@ def validate_user_session_token(user_id:int, access_token:str, db:Session):
         User_sessions.is_deleted==False).first()
     return user_session
 
-
+"""Deletes access token to log user out"""
 def delete_session_logout(user_id:int, db:Session):
     session = db.query(User_sessions).filter(User_sessions.user_id ==user_id)
     if not session:
@@ -30,7 +30,7 @@ def delete_session_logout(user_id:int, db:Session):
     db.commit()
     return {"msg":f"User logged out successfully!"}
     
-
+"""Create user session"""
 def create_user_session(user_id:int, access_token:str, db:Session):
     delete_session_logout(user_id,db)
     user_session = User_sessions(user_id = user_id,

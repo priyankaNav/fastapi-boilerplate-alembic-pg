@@ -1,4 +1,4 @@
-from fastapi import File, UploadFile
+from fastapi import UploadFile
 from db.models.users import Users
 from sqlalchemy.orm import Session
 from utils.aws_s3_utility import s3_file_upload
@@ -11,6 +11,7 @@ Uploads file to S3 and then saves the file details in database
 def file_upload(file: UploadFile, current_user: Users, db:Session):
    
     temp = file.filename.split('.')
+    # Generate a unique filename to upload to S3 to prevent from overwriting
     s3_filename = temp[0] + "-" + str(int(time.time())) +  "." + temp[1]
     # Uploads file to s3
     s3_file_upload(file.file, filename=s3_filename)

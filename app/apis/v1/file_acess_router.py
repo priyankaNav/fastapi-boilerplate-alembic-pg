@@ -17,18 +17,20 @@ from utils.aws_s3_utility import s3_file_download, delete_file_s3
 router = APIRouter( prefix ="/files", tags=["files"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
+"""Uploads File to S3"""
 @router.post("/upload")
 async def upload_file( file: Annotated[UploadFile, File()], 
     current_user: Annotated[Users, Depends(get_current_active_user)], 
     db:Session=Depends(get_db)):
 
     try:
+        # Uploads file to S3 and then persists in DB
         file_id = file_upload(file=file, current_user=current_user, db=db)
     except(BotoCoreError, ClientError, HTTPException, Exception) as e:
         raise HTTPException(status_code=e.status_code, detail=f"{str(e.detail)}")
     return {"file_id":file_id}
 
-
+"""Retrieves file for a specific file_id"""
 @router.get("/{file_id}")
 async def download_file( file_id:str, current_user: Annotated[Users, Depends(get_current_active_user)], 
                        db:Session=Depends(get_db)):
@@ -39,9 +41,11 @@ async def download_file( file_id:str, current_user: Annotated[Users, Depends(get
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You are not authorized to perform this operation!",
             )
-       
+        # Generating the user given filename 
         original_filename = "-".join(fileInfo.filename.split('-')[:-1])
+        # Gets file from S3
         response = s3_file_download(fileInfo.filename)
+        
         content_disposition= f"attachment; filename={original_filename}"
 
         return Response(content= response['Body'].read(), 
@@ -52,28 +56,29 @@ async def download_file( file_id:str, current_user: Annotated[Users, Depends(get
             raise HTTPException(400, detail=f"{str(e.detail)}")
 
         
-
+"""Updates file metadata for a specific file_id"""
 @router.put("/{file_id}")
 async def update_file( file_id:str, file: Annotated[UploadFile, File()], 
                     current_user: Annotated[Users, Depends(get_current_active_user)],
                     db:Session=Depends(get_db)):
     try:
+        #Validates if the file is associated with current logged-in user
         fileInfo = validate_file(file_id=file_id, user_id=current_user.user_id,  db=db)
         if fileInfo is None:
             raise HTTPException(
                 status_code=status.HTTP_403_FORBIDDEN,
                 detail="You are not authorized to perform this operation!",
             )
-        
         file_id = file_update(file_id=file_id, file=file, current_user=current_user, db=db)
     except(BotoCoreError, ClientError, HTTPException, Exception) as e:
         raise HTTPException(status_code=e.status_code, detail=f"{str(e.detail)}")
     return {"file_id":file_id}
 
     
-
+"""Deletes file from S3 and database for given file_id"""
 @router.delete("/{file_id}")
-async def delete_file( file_id:str, current_user: Annotated[Users, Depends(get_current_active_user)], db:Session=Depends(get_db)):
+async def delete_file( file_id:str, current_user: Annotated[Users, Depends(get_current_active_user)],
+                       db:Session=Depends(get_db)):
     try:
         file_info = validate_file(file_id=file_id, user_id=current_user.user_id,  db=db)
         if file_info is None:
@@ -83,12 +88,12 @@ async def delete_file( file_id:str, current_user: Annotated[Users, Depends(get_c
             )
         # Delete files from s3
         response = delete_file_s3(filename= file_info.filename)
+       
         # Delete file from db
         message = delete_user_file(file_id=file_id, user_id=current_user.user_id, db=db)
         if message.get("error"):
             raise HTTPException(detail=message.get("error"), status_code=status.HTTP_400_BAD_REQUEST)
-        
-
+    
     except(BotoCoreError, ClientError, HTTPException, Exception) as e:
         raise HTTPException(status_code=e.status_code, detail=f"{str(e.detail)}")
 

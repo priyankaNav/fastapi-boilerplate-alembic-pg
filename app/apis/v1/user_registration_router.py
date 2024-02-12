@@ -17,6 +17,7 @@ JWT_SECRET_KEY = os.getenv("JWT_SECRET_TOKEN")
 router = APIRouter( prefix ="/users", tags=["users"])
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
+"""Create User """
 @router.post("/createUser",response_model = CreateUserResponse, status_code=status.HTTP_201_CREATED)   
 def create_user(user : CreateUser, db : Session=Depends(get_db)):
     try:
@@ -34,7 +35,7 @@ def create_user(user : CreateUser, db : Session=Depends(get_db)):
         raise HTTPException(status_code=e.status_code, detail=f"{str(e.detail)}")
     
 
-
+"""User Login """
 @router.post("/login", response_model=Token)
 async def user_login_for_access_token( form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
                                       db: Session=Depends(get_db)):
@@ -59,7 +60,7 @@ async def user_login_for_access_token( form_data: Annotated[OAuth2PasswordReques
    
  
 
-
+""" User Logout """
 @router.delete("/logout")
 async def logout(access_token: Annotated[str, Depends(oauth2_scheme)], db:Session=Depends(get_db)):
     try:  

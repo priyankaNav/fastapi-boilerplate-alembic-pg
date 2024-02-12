@@ -17,12 +17,12 @@ class Users(Base):
     user_session = relationship("User_sessions", back_populates="user")
     files = relationship("Files", back_populates="user")
 
-
+"""Get user by user_email"""
 def get_user(user_email:str, db:Session):
     user = db.query(Users).filter(Users.user_email == user_email.lower()).first()
     return user
 
-
+"""Create new user"""
 def create_new_user(user : CreateUser, db: Session):
     user = Users(
         user_email = user.user_email.lower(),
