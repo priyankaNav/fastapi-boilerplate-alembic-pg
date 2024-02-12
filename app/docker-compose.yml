@@ -1,0 +1,36 @@
+version: '3.8'
+services:
+  web:
+    build: .
+    command: /bin/sh -c "alembic revision --autogenerate -m 'create tables' && alembic upgrade head && uvicorn main:app --host 0.0.0.0 --reload"
+    # command: uvicorn main:app --host 0.0.0.0 --reload
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://postgres:typeface2024@db:5432/dropbox-equivalent-db
+      - AWS_SECRET_ACCESS_KEY= #To be Filled
+      - AWS_ACCESS_KEY_ID= #To be Filled
+      - AWS_S3_BUCKET_NAME=dropbox-equivalent-storage #To be Filled
+      - AWS_REGION=us-west-1 #To be Filled
+
+      - JWT_SECRET_TOKEN=e8c8f79fcb284e8986181346bff521ab97407ddc03ddb0f01406daffa6c6f467 #To be Filled
+      - JWT_ALGORITHM=HS256     
+      - JWT_ACCESS_TOKEN_EXPIRE_MINUTES=30
+      - PROJECT_NAME=Dropbox Equivalent Service
+      - PROJECT_VERSION=V1.0
+
+  db:
+    image: postgres
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: typeface2024
+      POSTGRES_DB: dropbox-equivalent-db
+
+volumes:
+  postgres_data:
