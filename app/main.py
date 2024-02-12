@@ -25,7 +25,5 @@ def start_application():
 
 app = start_application()
 
-# @app.get("/")
-# def home():
-#     return {"message": "FastAPI Server is up and running!"}
+
 

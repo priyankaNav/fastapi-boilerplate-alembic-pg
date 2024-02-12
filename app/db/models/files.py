@@ -1,8 +1,7 @@
 from db.base_class import Base
 from datetime import datetime
 from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, UUID
-from sqlalchemy.orm import relationship, Session
-from datetime import datetime
+from sqlalchemy.orm import relationship, Session, defer
 import uuid
 from fastapi import status, HTTPException
 
@@ -80,3 +79,8 @@ def delete_user_file(file_id:str, user_id:int, db:Session):
     db.commit()
     return {"msg":f"File deleted Successfully!"}
 
+
+"""Fetches all files created by user with user_id"""
+def list_user_files(user_id:int, db:Session):
+    files = db.query(Files).filter(Files.user_id == user_id).options(defer(Files.user_id)).all()
+    return files

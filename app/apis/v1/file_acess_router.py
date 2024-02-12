@@ -1,14 +1,13 @@
-
 from fastapi import APIRouter, status, Response
 from sqlalchemy.orm import Session
-from fastapi import File, UploadFile, Depends
+from fastapi import File, UploadFile, Depends, Query
 from db.session import get_db
 from fastapi import status, HTTPException
 from fastapi.security import  OAuth2PasswordBearer
 from db.models.users import Users
-from typing import Annotated
-from db.models.files import  validate_file, delete_user_file
-from services.file_service import file_upload, file_update
+from typing import Annotated, List
+from db.models.files import  Files, validate_file, delete_user_file
+from services.file_service import file_upload, file_update, get_user_files
 from botocore.exceptions import BotoCoreError, ClientError
 from apis.v1.user_registration_router import get_current_active_user
 from utils.aws_s3_utility import s3_file_download, delete_file_s3
@@ -19,7 +18,7 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/users/login")
 
 """Uploads File to S3"""
 @router.post("/upload")
-async def upload_file( file: Annotated[UploadFile, File()], 
+def upload_file( file: Annotated[UploadFile, File()], 
     current_user: Annotated[Users, Depends(get_current_active_user)], 
     db:Session=Depends(get_db)):
 
@@ -30,9 +29,10 @@ async def upload_file( file: Annotated[UploadFile, File()],
         raise HTTPException(status_code=e.status_code, detail=f"{str(e.detail)}")
     return {"file_id":file_id}
 
+
 """Retrieves file for a specific file_id"""
-@router.get("/{file_id}")
-async def download_file( file_id:str, current_user: Annotated[Users, Depends(get_current_active_user)], 
+@router.get("/download/")
+def download_file( file_id: Annotated[str, Query(min_length=36, max_length=36, description= "Please enter a valid UUID")], current_user: Annotated[Users, Depends(get_current_active_user)], 
                        db:Session=Depends(get_db)):
     try:
         fileInfo = validate_file(file_id=file_id, user_id=current_user.user_id,  db=db)
@@ -57,8 +57,8 @@ async def download_file( file_id:str, current_user: Annotated[Users, Depends(get
 
         
 """Updates file metadata for a specific file_id"""
-@router.put("/{file_id}")
-async def update_file( file_id:str, file: Annotated[UploadFile, File()], 
+@router.put("/")
+def update_file( file_id: Annotated[str, Query(min_length=36, max_length=36, description= "Please enter a valid UUID")], file: Annotated[UploadFile, File()], 
                     current_user: Annotated[Users, Depends(get_current_active_user)],
                     db:Session=Depends(get_db)):
     try:
@@ -76,8 +76,8 @@ async def update_file( file_id:str, file: Annotated[UploadFile, File()],
 
     
 """Deletes file from S3 and database for given file_id"""
-@router.delete("/{file_id}")
-async def delete_file( file_id:str, current_user: Annotated[Users, Depends(get_current_active_user)],
+@router.delete("/")
+def delete_file( file_id: Annotated[str, Query(min_length=36, max_length=36, description= "Please enter a valid UUID")], current_user: Annotated[Users, Depends(get_current_active_user)],
                        db:Session=Depends(get_db)):
     try:
         file_info = validate_file(file_id=file_id, user_id=current_user.user_id,  db=db)
@@ -99,3 +99,16 @@ async def delete_file( file_id:str, current_user: Annotated[Users, Depends(get_c
 
     return {"message": "File deleted successfully!"}
         
+
+
+
+"""Retrieves file for a specific file_id"""
+@router.get("/")
+def fetch_user_files(current_user: Annotated[Users, Depends(get_current_active_user)], 
+                       db:Session=Depends(get_db)):
+    try:
+        user_files: List[Files] = get_user_files(current_user.user_id, db=db)
+        return user_files
+    
+    except(HTTPException, Exception) as e:
+            raise HTTPException(400, detail=f"{str(e.detail)}")

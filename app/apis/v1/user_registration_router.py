@@ -37,7 +37,7 @@ def create_user(user : CreateUser, db : Session=Depends(get_db)):
 
 """User Login """
 @router.post("/login", response_model=Token)
-async def user_login_for_access_token( form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
+def user_login_for_access_token( form_data: Annotated[OAuth2PasswordRequestForm, Depends()], 
                                       db: Session=Depends(get_db)):
     try:
         # Validating user_email and password
@@ -62,7 +62,7 @@ async def user_login_for_access_token( form_data: Annotated[OAuth2PasswordReques
 
 """ User Logout """
 @router.delete("/logout")
-async def logout(access_token: Annotated[str, Depends(oauth2_scheme)], db:Session=Depends(get_db)):
+def logout(access_token: Annotated[str, Depends(oauth2_scheme)], db:Session=Depends(get_db)):
     try:  
         # Validates user access_token
         user:Users = validate_user_token(access_token, db)
@@ -84,7 +84,7 @@ async def logout(access_token: Annotated[str, Depends(oauth2_scheme)], db:Sessio
 """
 Middleware to validate the user jwt access_token and authorize user
 """
-async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db:Session=Depends(get_db)):
+def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db:Session=Depends(get_db)):
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -101,7 +101,7 @@ async def get_current_user(token: Annotated[str, Depends(oauth2_scheme)], db:Ses
         raise credentials_exception
     return userInfo
 
-async def get_current_active_user(
+def get_current_active_user(
     current_user: Annotated[Users, Depends(get_current_user)]
 ):
     if current_user is None:
