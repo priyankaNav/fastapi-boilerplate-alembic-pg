@@ -5,3 +5,5 @@ env
 __pycache__/
 db/model/__pycache__/
 apis/v1/__pycache__/
+alembic/
+alembic.ini
