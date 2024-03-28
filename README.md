@@ -9,9 +9,9 @@ This Project is a FastAPI application that utilizes PostgresSQL for data storage
 
 ## Setup
 1. Clone the repository
-    ```https://github.com/priyankaNav/typeface-assignment```
+    ```https://github.com/priyankaNav/fastapi-boilerplate-alembic-pg```
 2. Navigate to app folder
-    ```$ cd typeface-assignment/app```
+    ```$ cd fastapi-boilerplate-alembic-pg/app```
 3. Update docker-compose.yml 
     1. Update S3 `AWS_SECRET_ACCESS_KEY`, `AWS_ACCESS_KEY_ID`, `AWS_S3_BUCKET_NAME`, `AWS_REGION`
     2. If `DATABASE_URL` is changed in docker-compose, make sure to update the same in `makefile` file
