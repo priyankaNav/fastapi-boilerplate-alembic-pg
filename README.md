@@ -1,4 +1,4 @@
-# Typeface-Assignment
+# fastapi-boilerplate-alembic-postgres-docker
 
 ## Overview
 This Project is a FastAPI application that utilizes PostgresSQL for data storage and AWS S3 for file storage.
